@@ -2,247 +2,454 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flood Risk Intelligence System - India</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flood Risk Intelligence Platform — India GIS</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <!-- Google Fonts - Distinctive Typography -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <!-- Animated Background -->
-    <div class="background-animation">
-        <div class="wave wave1"></div>
-        <div class="wave wave2"></div>
-        <div class="wave wave3"></div>
-    </div>
+<body class="dark-theme">
 
     <!-- Loading Screen -->
     <div class="loading-screen" id="loadingScreen">
-        <div class="loader">
-            <div class="water-drop"></div>
-            <div class="loading-text">Loading Flood Risk Data...</div>
+        <div class="loader-content">
+            <div class="spinner"></div>
+            <h2 class="loading-title">FLOOD RISK INTELLIGENCE</h2>
+            <p class="loading-subtitle">Loading GIS Spatial Telemetry & Risk Polygons...</p>
+            <div class="loading-bar-container">
+                <div class="loading-bar-fill" id="loadingBar"></div>
+            </div>
+            <div class="loading-status" id="loadingStatusText">Initializing India Flood Dataset...</div>
         </div>
     </div>
 
-    <!-- Header Section -->
-    <header class="header">
-        <div class="container">
-            <div class="header-content">
-                <div class="logo-section">
-                    <div class="icon-wrapper">
-                        <svg class="flood-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="currentColor"/>
-                        </svg>
-                    </div>
-                    <div class="title-group">
-                        <h1 class="main-title">Flood Risk Intelligence</h1>
-                        <p class="subtitle">Real-Time GIS Analysis & Prediction System</p>
-                    </div>
+    <!-- Clean Navigation Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                    </svg>
                 </div>
-                <div class="header-stats">
-                    <div class="stat-item">
-                        <span class="stat-number" id="highRiskCount">0</span>
-                        <span class="stat-label">High Risk</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="mediumRiskCount">0</span>
-                        <span class="stat-label">Medium Risk</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-number" id="lowRiskCount">0</span>
-                        <span class="stat-label">Low Risk</span>
-                    </div>
+                <div class="brand-info">
+                    <h1 class="brand-title">FLOOD RISK <span class="accent">INTEL</span></h1>
+                    <span class="brand-badge">India GIS Analysis</span>
                 </div>
             </div>
+
+            <!-- View Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-view="2d-map">
+                    <span>🗺️</span> <span>2D Map</span>
+                </button>
+                <button class="nav-tab" data-view="3d-terrain">
+                    <span>🏔️</span> <span>3D Terrain</span>
+                </button>
+                <button class="nav-tab" data-view="analytics">
+                    <span>📊</span> <span>Analytics</span>
+                </button>
+            </nav>
+        </div>
+
+        <!-- Center Search Bar -->
+        <div class="header-center">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search district (e.g. Mumbai, Patna, Surat...)" autocomplete="off">
+                <button class="search-clear-btn" id="searchClearBtn" title="Clear">✕</button>
+            </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="header-right">
+            <!-- Basemap Selector -->
+            <div class="basemap-selector-wrap">
+                <label for="basemapSelect" class="sr-only">Basemap</label>
+                <select id="basemapSelect" class="basemap-select">
+                    <option value="dark" selected>🌙 Dark Canvas</option>
+                    <option value="street">🛣️ Street Map</option>
+                    <option value="satellite">🛰️ Satellite</option>
+                    <option value="terrain">🏔️ Topo Terrain</option>
+                </select>
+            </div>
+
+            <!-- Modal Trigger Buttons -->
+            <button class="header-btn" id="compareModeBtn" title="Compare two districts side-by-side">
+                <span>⚖️</span> <span class="btn-text">Compare</span>
+            </button>
+            <button class="header-btn" id="openMethodologyBtn" title="GIS Methodology & Model">
+                <span>📐</span> <span class="btn-text">Methodology</span>
+            </button>
+            <button class="header-btn emergency" id="openSosBtn" title="Emergency Contacts & Helpline">
+                <span>🚨</span> <span class="btn-text">SOS</span>
+            </button>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-        <div class="content-wrapper">
-            <!-- Control Panel -->
-            <div class="control-panel" id="controlPanel">
-                <div class="panel-header">
-                    <h3>Analysis Dashboard</h3>
-                    <button class="toggle-btn" id="togglePanel">
-                        <span></span>
+    <!-- Main Workspace -->
+    <main class="main-viewport">
+
+        <!-- ══════════ VIEW 1: 2D LEAFLET MAP ══════════ -->
+        <div class="view-panel active" id="view2DMap">
+            
+            <!-- Map Container -->
+            <div id="map" class="map-container"></div>
+
+            <!-- Floating Top Filter Bar -->
+            <div class="floating-filter-bar">
+                <button class="filter-pill active" data-filter="all" id="pillAll">
+                    All Districts <span class="count-badge" id="totalDistCount">32</span>
+                </button>
+                <button class="filter-pill pill-high" data-filter="High" id="pillHigh">
+                    <span class="dot red"></span> High Risk <span class="count-badge" id="highRiskCount">10</span>
+                </button>
+                <button class="filter-pill pill-med" data-filter="Medium" id="pillMedium">
+                    <span class="dot orange"></span> Medium <span class="count-badge" id="mediumRiskCount">12</span>
+                </button>
+                <button class="filter-pill pill-low" data-filter="Low" id="pillLow">
+                    <span class="dot green"></span> Low Risk <span class="count-badge" id="lowRiskCount">10</span>
+                </button>
+                <button class="filter-pill pill-tune" id="toggleFilterPopoverBtn" title="Adjust Elevation & Rainfall Sliders">
+                    <span>⚙️ Sliders</span>
+                </button>
+            </div>
+
+            <!-- Compact Sliders Popover (Opens on clicking ⚙️ Sliders) -->
+            <div class="filter-popover" id="filterPopover">
+                <div class="popover-header">
+                    <h4>Spatial Range Filters</h4>
+                    <button class="popover-close-btn" id="closeFilterPopoverBtn">✕</button>
+                </div>
+                <div class="popover-body">
+                    <div class="range-field">
+                        <div class="range-labels">
+                            <span>Max Elevation:</span>
+                            <strong id="elevSliderVal">1000 m</strong>
+                        </div>
+                        <input type="range" id="elevationSlider" min="0" max="1000" step="25" value="1000">
+                    </div>
+                    <div class="range-field">
+                        <div class="range-labels">
+                            <span>Min Annual Rainfall:</span>
+                            <strong id="rainSliderVal">0 mm</strong>
+                        </div>
+                        <input type="range" id="rainfallSlider" min="0" max="4000" step="100" value="0">
+                    </div>
+                    <button class="reset-filters-btn" id="resetSlidersBtn">Reset Sliders</button>
+                </div>
+            </div>
+
+            <!-- Floating Map Tool Buttons -->
+            <div class="floating-map-tools">
+                <button class="map-tool-btn" id="recenterMapBtn" title="Recenter to India">
+                    <span>🎯</span>
+                </button>
+                <button class="map-tool-btn" id="toggleHeatmapBtn" title="Toggle Risk Glow Density">
+                    <span>🔥</span>
+                </button>
+            </div>
+
+            <!-- Floating Clean Legend -->
+            <div class="floating-legend" id="floatingLegend">
+                <div class="legend-header">
+                    <span class="legend-title">Risk Legend</span>
+                    <button class="legend-collapse-btn" id="toggleLegendBtn">−</button>
+                </div>
+                <div class="legend-items" id="legendBody">
+                    <div class="legend-item">
+                        <span class="color-badge high"></span>
+                        <div class="legend-desc">
+                            <strong>High Risk</strong>
+                            <small>Coastal & River Basins (&lt;50m)</small>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <span class="color-badge medium"></span>
+                        <div class="legend-desc">
+                            <strong>Medium Risk</strong>
+                            <small>Moderate Plains (50–200m)</small>
+                        </div>
+                    </div>
+                    <div class="legend-item">
+                        <span class="color-badge low"></span>
+                        <div class="legend-desc">
+                            <strong>Low Risk</strong>
+                            <small>Elevated Plateaus (&gt;200m)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floating District Detail Card (Appears on clicking/selecting any district) -->
+            <aside class="district-detail-card" id="districtCard">
+                <button class="card-close-btn" id="closeDistrictCardBtn" title="Close">✕</button>
+                
+                <div class="district-card-header">
+                    <div class="district-title-wrap">
+                        <h2 class="district-title" id="dcName">Mumbai</h2>
+                        <span class="district-subtitle" id="dcState">Maharashtra</span>
+                    </div>
+                    <div class="risk-pill high" id="dcRiskBadge">HIGH RISK</div>
+                </div>
+
+                <!-- 4 Metrics Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-box">
+                        <span class="m-val" id="dcElevation">14 m</span>
+                        <span class="m-lbl">Avg Elevation</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="m-val" id="dcRainfall">2400 mm</span>
+                        <span class="m-lbl">Annual Rain</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="m-val" id="dcRiverDist">0.5 km</span>
+                        <span class="m-lbl">River Proximity</span>
+                    </div>
+                    <div class="metric-box">
+                        <span class="m-val" id="dcPopulation">12.4M</span>
+                        <span class="m-lbl">Population</span>
+                    </div>
+                </div>
+
+                <!-- River & Flood Zones -->
+                <div class="detail-section">
+                    <div class="section-label">🌊 Primary River & Vulnerable Zones</div>
+                    <div class="river-name" id="dcRiver">Mithi River</div>
+                    <div class="flood-zones-text" id="dcZones">Dharavi, Kurla, Chembur, Malad, Sion, Bandra</div>
+                </div>
+
+                <!-- Live Open-Meteo Weather -->
+                <div class="weather-box">
+                    <div class="weather-box-header">
+                        <span>🌧️ Live Weather Telemetry</span>
+                        <span class="weather-status-badge" id="dcWeatherStatus">Loading...</span>
+                    </div>
+                    <div class="weather-grid" id="dcWeatherGrid">
+                        <div class="weather-item">Temp: <strong id="dcWeatherTemp">--°C</strong></div>
+                        <div class="weather-item">Humidity: <strong id="dcWeatherHumidity">--%</strong></div>
+                        <div class="weather-item">Rain: <strong id="dcWeatherRain">-- mm/h</strong></div>
+                        <div class="weather-item">Wind: <strong id="dcWeatherWind">-- km/h</strong></div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="card-action-btns">
+                    <button class="btn-card-action" id="dcView3DBtn">
+                        <span>🏔️</span> View 3D Simulation
+                    </button>
+                    <button class="btn-card-action secondary" id="dcCompareBtn">
+                        <span>⚖️</span> Compare
                     </button>
                 </div>
-                
-                <div class="panel-content">
-                    <!-- Methodology Section -->
-                    <div class="info-card methodology-card">
-                        <div class="card-icon">📊</div>
-                        <h4>Methodology</h4>
-                        <p class="highlight">Weighted Overlay Analysis</p>
-                        <div class="methodology-details">
-                            <div class="method-item">
-                                <span class="dot elevation"></span>
-                                <span>Elevation (DEM)</span>
-                                <span class="weight">30%</span>
-                            </div>
-                            <div class="method-item">
-                                <span class="dot rainfall"></span>
-                                <span>Rainfall Data</span>
-                                <span class="weight">35%</span>
-                            </div>
-                            <div class="method-item">
-                                <span class="dot river"></span>
-                                <span>River Proximity</span>
-                                <span class="weight">25%</span>
-                            </div>
-                            <div class="method-item">
-                                <span class="dot landuse"></span>
-                                <span>Land Use Pattern</span>
-                                <span class="weight">10%</span>
-                            </div>
-                        </div>
-                    </div>
+            </aside>
+        </div>
 
-                    <!-- Filter Section -->
-                    <div class="info-card filter-card">
-                        <div class="card-icon">🔍</div>
-                        <h4>Risk Filters</h4>
-                        <div class="filter-group">
-                            <label class="filter-checkbox">
-                                <input type="checkbox" id="filterHigh" checked>
-                                <span class="checkmark high"></span>
-                                <span>Show High Risk</span>
-                            </label>
-                            <label class="filter-checkbox">
-                                <input type="checkbox" id="filterMedium" checked>
-                                <span class="checkmark medium"></span>
-                                <span>Show Medium Risk</span>
-                            </label>
-                            <label class="filter-checkbox">
-                                <input type="checkbox" id="filterLow" checked>
-                                <span class="checkmark low"></span>
-                                <span>Show Low Risk</span>
-                            </label>
-                        </div>
+        <!-- ══════════ VIEW 2: 3D TERRAIN SIMULATOR ══════════ -->
+        <div class="view-panel" id="view3DTerrain">
+            <div class="sim-header-bar">
+                <div class="sim-title-group">
+                    <h3>🏔️ 3D Inundation & Elevation Simulator</h3>
+                    <p>Real-time Three.js mesh with adjustable flood surge plane and rainfall particles.</p>
+                </div>
+                <div class="sim-controls">
+                    <div class="sim-ctrl">
+                        <label for="simWaterSlider">Flood Depth:</label>
+                        <input type="range" id="simWaterSlider" min="0" max="50" step="0.5" value="12">
+                        <span class="sim-badge" id="simWaterVal">12.0 m</span>
                     </div>
-
-                    <!-- Search Section -->
-                    <div class="info-card search-card">
-                        <div class="card-icon">📍</div>
-                        <h4>Find Location</h4>
-                        <div class="search-box">
-                            <input type="text" id="searchInput" placeholder="Search district or city...">
-                            <button id="searchBtn">
-                                <svg viewBox="0 0 24 24" fill="none">
-                                    <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
-                                    <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </button>
-                        </div>
+                    <div class="sim-ctrl">
+                        <label for="simRainSelect">Rain:</label>
+                        <select id="simRainSelect">
+                            <option value="moderate" selected>Moderate Rain</option>
+                            <option value="heavy">Heavy Downpour</option>
+                            <option value="none">Clear</option>
+                        </select>
                     </div>
-
-                    <!-- Tips Section -->
-                    <div class="info-card tips-card">
-                        <div class="card-icon">💡</div>
-                        <h4>Interactive Tips</h4>
-                        <ul class="tips-list">
-                            <li>Click any region for detailed risk analysis</li>
-                            <li>Hover to see quick information</li>
-                            <li>Use filters to focus on specific risk levels</li>
-                            <li>Zoom and pan to explore different areas</li>
-                        </ul>
-                    </div>
+                    <button class="sim-btn" id="simAnimateBtn">▶ Surge Pulse</button>
+                    <button class="sim-btn reset" id="simResetBtn">🔄 Reset View</button>
                 </div>
             </div>
+            <div id="threeTerrainCanvasContainer" class="three-container"></div>
+            <div class="three-hint">💡 Click & drag to rotate in 360° | Scroll / pinch to zoom</div>
+        </div>
 
-            <!-- Map Container -->
-            <div class="map-section">
-                <div id="map" class="flood-map"></div>
-                
-                <!-- Floating Legend -->
-                <div class="legend-floating">
-                    <div class="legend-header">
-                        <h3>Risk Classification</h3>
-                        <div class="legend-toggle" id="legendToggle">−</div>
-                    </div>
-                    <div class="legend-content" id="legendContent">
-                        <div class="legend-item">
-                            <div class="legend-indicator high-risk">
-                                <span class="pulse-ring"></span>
-                            </div>
-                            <div class="legend-text">
-                                <strong>High Risk</strong>
-                                <span>Immediate attention required</span>
-                            </div>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-indicator medium-risk">
-                                <span class="pulse-ring"></span>
-                            </div>
-                            <div class="legend-text">
-                                <strong>Medium Risk</strong>
-                                <span>Moderate flood probability</span>
-                            </div>
-                        </div>
-                        <div class="legend-item">
-                            <div class="legend-indicator low-risk">
-                                <span class="pulse-ring"></span>
-                            </div>
-                            <div class="legend-text">
-                                <strong>Low Risk</strong>
-                                <span>Minimal flood concern</span>
-                            </div>
-                        </div>
-                    </div>
+        <!-- ══════════ VIEW 3: ANALYTICS DASHBOARD ══════════ -->
+        <div class="view-panel" id="viewAnalytics">
+            <div class="analytics-container">
+                <div class="analytics-header">
+                    <h2>📊 Risk Distribution & Analytical Insights</h2>
+                    <p>Aggregated statistics from GIS weighted overlay assessment across 32 Indian districts.</p>
                 </div>
-
-                <!-- Data Source Badge -->
-                <div class="data-badge">
-                    <span class="badge-icon">🛰️</span>
-                    <span class="badge-text">Real GIS Data • Updated 2024</span>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>Risk Classification Breakdown</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chartRiskDistribution"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Elevation vs. Rainfall Correlation</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chartElevRain"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card span-full">
+                        <h3>Top High-Risk Districts by Estimated Impacted Population</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chartPopulationImpact"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
     </main>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h4>Minor Project 2025-26</h4>
-                    <p style="margin: 8px 0;"><strong>Bhavesh Oswal</strong> | AIDS</p>
-                    <p style="margin: 8px 0;"><strong>Wasif Kazi</strong> | CSE</p>
-                    <p style="margin: 8px 0;"><strong>Arya Diwan</strong> | CSE</p>
-                    <p style="margin: 8px 0;"><strong>Harshwardhan Jagtap</strong> | MECH</p>
-                    <p style="margin-top: 12px; color: #06b6d4;">Annasaheb Dange College of Engineering and Technology (ADCET), Ashta</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Technology Stack</h4>
-                    <p>QGIS • Leaflet.js • HTML5 • CSS3 • JavaScript</p>
-                    <p style="margin-top: 8px; font-size: 0.85rem;">GIS & Remote Sensing Analysis</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Data Sources</h4>
-                    <p>IMD • ISRO • Government of India</p>
-                    <p style="margin-top: 8px; font-size: 0.85rem;">Satellite Imagery & Field Data</p>
-                </div>
+    <!-- ══════════ MODAL: DISTRICT COMPARISON ══════════ -->
+    <div class="modal-backdrop" id="compareModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚖️ District Risk Comparison</h3>
+                <button class="modal-close-btn" id="closeCompareModalBtn">✕</button>
             </div>
-            <div class="footer-bottom">
-                <p>This project is created for academic/educational purposes as part of college research work.</p>
-                <p style="margin-top: 8px; font-size: 0.85rem; opacity: 0.7;">© 2025-26 Minor Project | Bhavesh Oswal & Wasif Kazi | ADCET, Ashta</p>
+            <div class="modal-body">
+                <div class="compare-selectors">
+                    <div class="compare-select-col">
+                        <label for="compareSelectA">District 1:</label>
+                        <select id="compareSelectA" class="select-styled"></select>
+                    </div>
+                    <div class="vs-circle">VS</div>
+                    <div class="compare-select-col">
+                        <label for="compareSelectB">District 2:</label>
+                        <select id="compareSelectB" class="select-styled"></select>
+                    </div>
+                </div>
+                <div class="compare-results-grid" id="compareGridResult">
+                    <!-- Populated dynamically via JS -->
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- Leaflet JavaScript -->
+    <!-- ══════════ MODAL: GIS METHODOLOGY ══════════ -->
+    <div class="modal-backdrop" id="methodologyModal">
+        <div class="modal-card modal-large">
+            <div class="modal-header">
+                <h3>📐 GIS Spatial Analysis Methodology</h3>
+                <button class="modal-close-btn" id="closeMethodologyModalBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="methodology-intro">
+                    Flood vulnerability across Indian districts is determined using a <strong>Weighted Overlay Analysis</strong> combining four core environmental and geographic parameters processed via GIS.
+                </p>
+
+                <div class="weights-grid">
+                    <div class="weight-card">
+                        <div class="weight-num">35%</div>
+                        <h4>Annual Rainfall</h4>
+                        <p>Precipitation volume. Higher rainfall directly compounds surface runoff and waterlogging.</p>
+                    </div>
+                    <div class="weight-card">
+                        <div class="weight-num">30%</div>
+                        <h4>Elevation (DEM)</h4>
+                        <p>Digital Elevation Model. Low-lying coastal and basin regions (&lt;50m) face severe accumulation.</p>
+                    </div>
+                    <div class="weight-card">
+                        <div class="weight-num">25%</div>
+                        <h4>River Proximity</h4>
+                        <p>Distance from major river channels (Ganga, Brahmaputra, Krishna, Tapi, Adyar).</p>
+                    </div>
+                    <div class="weight-card">
+                        <div class="weight-num">10%</div>
+                        <h4>Land Use & Urbanization</h4>
+                        <p>Impervious surface coverage and dense population centers reducing soil infiltration.</p>
+                    </div>
+                </div>
+
+                <div class="formula-box">
+                    <div class="formula-label">MODEL FORMULA:</div>
+                    <code>Risk Score = (Rainfall × 0.35) + (Elevation × 0.30) + (River × 0.25) + (LandUse × 0.10)</code>
+                </div>
+
+                <div class="class-summary">
+                    <div class="class-row high">
+                        <span class="pill">Score 3.5 – 5.0</span>
+                        <strong>High Risk:</strong> Coastal delta, low elevation &lt;50m, heavy rainfall &gt;2000mm.
+                    </div>
+                    <div class="class-row med">
+                        <span class="pill">Score 2.0 – 3.4</span>
+                        <strong>Medium Risk:</strong> Moderate plains (50–200m), rainfall 1000–2000mm.
+                    </div>
+                    <div class="class-row low">
+                        <span class="pill">Score 1.0 – 1.9</span>
+                        <strong>Low Risk:</strong> Elevated plateau (&gt;200m), rainfall &lt;1000mm.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ MODAL: EMERGENCY SOS & HELPLINES ══════════ -->
+    <div class="modal-backdrop" id="sosModal">
+        <div class="modal-card">
+            <div class="modal-header emergency">
+                <h3>🚨 Emergency Helplines & Evacuation Protocol</h3>
+                <button class="modal-close-btn" id="closeSosModalBtn">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="sos-call-grid">
+                    <div class="sos-call-box">
+                        <span class="sos-num">1078</span>
+                        <span class="sos-label">NDRF Emergency Helpline (Toll-Free)</span>
+                    </div>
+                    <div class="sos-call-box">
+                        <span class="sos-num">1070</span>
+                        <span class="sos-label">State Disaster Emergency Operation (SEOC)</span>
+                    </div>
+                    <div class="sos-call-box">
+                        <span class="sos-num">112</span>
+                        <span class="sos-label">National All-in-One Emergency</span>
+                    </div>
+                </div>
+
+                <div class="evac-guide">
+                    <h4>📋 Immediate Flood Response Checklist:</h4>
+                    <ul>
+                        <li>✅ Move family and essential valuables to designated high ground / shelters immediately.</li>
+                        <li>✅ Disconnect main electricity breaker and gas valves before leaving.</li>
+                        <li>✅ Keep an emergency waterproof kit with drinking water, dry food, flashlight, and medications.</li>
+                        <li>⚠️ Never attempt to walk, swim, or drive through moving flood waters.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- External CDN Scripts -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <!-- Custom JavaScript -->
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- GeoJSON Dataset (Supports direct file:// opening without web server) -->
+    <script src="flood_risk_data.js"></script>
+
+    <!-- Application Logic -->
     <script src="script.js"></script>
 </body>
 </html>
